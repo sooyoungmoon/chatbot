@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'py_chatbot'
+package_name = 'chatbot_ros2'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'chatbot = py_chatbot.chatbot:main',
+            'chatbot = chatbot_ros2.chatbot:main',
         ],
     },
 )

@@ -9,8 +9,10 @@ from turtlesim.msg import Pose
 import gradio as gr
 import json
 import random
+from dotenv import load_dotenv
 
-os.environ["OPENAI_API_KEY"] = [YOUR_OPENAI_API_KEY]
+
+
 
 use_functions = [
     {
@@ -38,6 +40,7 @@ class ChatbotNode(Node):
         super().__init__('chatbot_node')
         self.get_logger().info('Chatbot node has been started.')
 
+        load_dotenv(os.path.expanduser('~/ros2_ws/src/chatbot_ros2/openapi_key.env'))
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         self.timer = self.create_timer(5.0, self.timer_callback)
 
@@ -76,6 +79,7 @@ class ChatbotNode(Node):
             return None
 
     def process_pose_request(self, user_message, chat_history):
+        print("process_pose_request")
         try:
             msgs = [
                 {
@@ -99,6 +103,7 @@ class ChatbotNode(Node):
                 tools=use_functions
             )             
             response_msg = response.choices[0].message
+            print(response_msg)
             tool_calls = response_msg.tool_calls
             # 함수 호출 결과를 저장할 리스트
             proc_messages = []
