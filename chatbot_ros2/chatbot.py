@@ -11,9 +11,6 @@ import json
 import random
 from dotenv import load_dotenv
 
-
-
-
 use_functions = [
     {
         "type": "function",
@@ -44,35 +41,30 @@ class ChatbotNode(Node):
         self.client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         self.timer = self.create_timer(5.0, self.timer_callback)
 
-        self.subscription = self.create_subscription(
+        self.subscription_turtle1 = self.create_subscription(
             Pose,
-            '/turtle2/pose',
-            self.pose_callback,
+            '/turtle1/pose',
+            self.pose_callback_turtle1,
             10
         )
-        self.subscription  # prevent unused variable warning
+        self.subscription_turtle2 = self.create_subscription(
+            Pose,
+            '/turtle2/pose',
+            self.pose_callback_turtle2,
+            10
+        )
+        self.subscription_turtle1  # prevent unused variable warning
+        self.subscription_turtle2
         self.chat_history = []
-        self.pose = Pose()
-
-    def get_fruit_price(self, fruit_name):
-        fruit_prices = {
-            '사과': '1000',
-            '바나나': '500',
-            '오렌지': '750',
-            '배': '800'
-        }
-        if fruit_name in fruit_prices:
-            #print(fruit_name + ':' + fruit_prices[fruit_name])
-            return fruit_prices[fruit_name]
-        return None
-    
+        self.pose_turtle1 = Pose()
+        self.pose_turtle2 = Pose()
+   
     def get_robot_pose(self, robot_name):
         print("get_robot_pose")
-
         robot_poses = {
-            'turtle2': Pose(x=self.pose.x, y=self.pose.y, theta=self.pose.theta, linear_velocity=self.pose.linear_velocity, angular_velocity=self.pose.angular_velocity)
+            'turtle1': Pose(x=self.pose_turtle1.x, y=self.pose_turtle1.y, theta=self.pose_turtle1.theta, linear_velocity=self.pose_turtle1.linear_velocity, angular_velocity=self.pose_turtle1.angular_velocity),
+            'turtle2': Pose(x=self.pose_turtle2.x, y=self.pose_turtle2.y, theta=self.pose_turtle2.theta, linear_velocity=self.pose_turtle2.linear_velocity, angular_velocity=self.pose_turtle2.angular_velocity)
         }
-
         if robot_name in robot_poses:
             return robot_poses[robot_name]
         else:
@@ -145,98 +137,22 @@ class ChatbotNode(Node):
             if "insufficient_quota" in str(e):
                 return "", [("Error", "오류가 발생했습니다: API 사용 한도를 초과했습니다. 플랜 및 결제 정보를 확인하세요.")]
             return "", [("Error", f"오류가 발생했습니다: {str(e)}")]
-
-    def process_fruit_request(self, user_message, chat_history):
-        try:            
-           
-            msgs = [
-                {
-                    "role": "system",
-                    "content": "당신은 과일 가격을 알려주는 도우미입니다. 제공된 도구를 사용하여 사용자에게 과일 가격을 알려주세요."
-                },
-                {
-                    "role": "user",
-                    "content": user_message  # 사용자 입력을 사용
-                }
-            ]
-            if chat_history:
-                for user, assistant in chat_history:
-                    msgs.append({"role": "user", "content": user})
-                    msgs.append({"role": "assistant", "content": assistant})
-                    msgs.append({"role": "user", "content": user_message})
-
-            # API 호출
-            response = self.client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=msgs,
-            tools=use_functions
-            )                     
-            # API 응답 처리
-            #print("response: ", response)
-            response_msg = response.choices[0].message
-            # print("response_msg.role: ", response_msg.role)
-            #print("response_msg.content: ", response_msg.content)
-            #print("response_msg: ", response_msg)
-            tool_calls = response_msg.tool_calls
-            #print("tool_calls: ", tool_calls)
-            
-            # 함수 호출 결과를 저장할 리스트
-            proc_messages = []
-
-            if tool_calls: # 도구 호출이 있는 경우
-                available_functions = {
-                    "get_fruit_price": self.get_fruit_price
-                }
-                msgs.append(response_msg)
-
-                for tool_call in tool_calls:
-                    function_name = tool_call.function.name
-                    function_to_call = available_functions[function_name]
-                    function_args = json.loads(tool_call.function.arguments)
-                    function_response = function_to_call(**function_args)
-
-                    proc_messages.append({ # 함수 실행 결과를 메시지에 추가
-                        "tool_call_id": tool_call.id,
-                        "role": "tool",
-                        "name": function_name,
-                        "content": function_response
-                    })
-                # 모든 메시지 합치기                 
-                msgs.extend(proc_messages)
-                final_response = self.client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=msgs)
-                #print("final_response: ", final_response.choices[0].message.content)
-                chat_history.append({"role": "user", "content": user_message})
-                chat_history.append({"role": "assistant", "content": final_response.choices[0].message.content})            
-
-                return final_response.choices[0].message.content, chat_history     
-            else:
-                return "가격 정보를 찾을 수 없습니다.", chat_history
-            
-
-        except Exception as e:
-            
-            if "insufficient_quota" in str(e):
-                return "", [("Error", "오류가 발생했습니다: API 사용 한도를 초과했습니다. 플랜 및 결제 정보를 확인하세요.")]
-            return "", [("Error", f"오류가 발생했습니다: {str(e)}")]
-
-    with gr.Blocks() as demo:
-                chatbot = gr.Chatbot(label="Chat", type="messages")
-                user_textbox = gr.Textbox(label="Input", placeholder="Type a message...")
-                clear = gr.Button("Clear chat history")
-
-                user_textbox.submit(process_fruit_request, [user_textbox, chatbot], [user_textbox, chatbot])
-                clear.click(lambda: None, None, chatbot, queue=False)
-                #demo.launch(share=True)
-
-    def pose_callback(self, msg):
+        
+    def pose_callback_turtle1(self, msg):
         #self.get_logger().info(f'Received pose: {msg}')
-        self.pose.x = msg.x
-        self.pose.y = msg.y
-        self.pose.theta = msg.theta
-        self.pose.linear_velocity = msg.linear_velocity
-        self.pose.angular_velocity = msg.angular_velocity
+        self.pose_turtle1.x = msg.x
+        self.pose_turtle1.y = msg.y
+        self.pose_turtle1.theta = msg.theta
+        self.pose_turtle1.linear_velocity = msg.linear_velocity
+        self.pose_turtle1.angular_velocity = msg.angular_velocity    
+
+    def pose_callback_turtle2(self, msg):
+        #self.get_logger().info(f'Received pose: {msg}')
+        self.pose_turtle2.x = msg.x
+        self.pose_turtle2.y = msg.y
+        self.pose_turtle2.theta = msg.theta
+        self.pose_turtle2.linear_velocity = msg.linear_velocity
+        self.pose_turtle2.angular_velocity = msg.angular_velocity
 
     def timer_callback(self):
         self.get_logger().info('Timer callback triggered.')
