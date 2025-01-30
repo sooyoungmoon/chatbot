@@ -10,7 +10,10 @@ This repository is for sharing knowledge to -
 You need to get an OpenAI API key for authentication.
 - Visit (https://platform.openai.com/docs/overview), create an account, and sign in
 - Create a secret key ([settings]-[API Keys]-[+ Create a new secret key])
-- Copy the new secret key and store it into you local directory as a file *.env
+- Copy the new secret key and store it into you local directory as a file (*.env)
+
+- 
+
 
 
 
