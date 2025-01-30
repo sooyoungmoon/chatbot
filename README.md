@@ -21,6 +21,22 @@ You need to get an OpenAI API key for authentication.
   - community-maintained library
 - In this repository, I'll show you the steps to use OpenAI API with Python bindings
 
+### [A simple example using OpenAI API with Python bindings](https://platform.openai.com/docs/api-reference/streaming) 
+```python
+from openai import OpenAI
+
+client = OpenAI()
+
+stream = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "Say this is a test"}],
+    stream=True,
+)
+for chunk in stream:
+    if chunk.choices[0].delta.content is not None:
+        print(chunk.choices[0].delta.content, end="")
+```
+
 ### The steps to use OpenAI API with Python bindings
 -First, you need to install the official Python bindings
  ```bash
