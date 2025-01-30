@@ -12,6 +12,12 @@ You need to get an OpenAI API key for authentication.
 - Create a secret key ([settings]-[API Keys]-[+ Create a new secret key])
 - Copy the new secret key and store it into you local directory as a file (*.env)
 
+### Ways to interact with the OpenAI API
+- If you use Python, there is official Python bindings for OpenAI API
+- Otherwise, you can interact with the API through
+  - HTTP requests from any language
+  - official Node.js library  
+  - community-maintained library
 - 
 
 
