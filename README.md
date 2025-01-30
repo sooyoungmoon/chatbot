@@ -23,9 +23,12 @@ You need to get an OpenAI API key for authentication.
 
 ### [A simple example using OpenAI API with Python bindings](https://platform.openai.com/docs/api-reference/streaming) 
 ```python
+import os
 from openai import OpenAI
+from dotenv import load_dotenv
 
-client = OpenAI()
+load_dotenv(os.path.expanduser('~/ros2_ws/src/chatbot_ros2/openapi_key.env')) # replace the file path with your own
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 stream = client.chat.completions.create(
     model="gpt-4o-mini",
@@ -35,6 +38,11 @@ stream = client.chat.completions.create(
 for chunk in stream:
     if chunk.choices[0].delta.content is not None:
         print(chunk.choices[0].delta.content, end="")
+```
+
+```bash
+moon@moon-900X5M:~/workspace/chatbot_ex$ python3 streaming.py
+This is a test. How can I assist you further?
 ```
 
 ### The steps to use OpenAI API with Python bindings
